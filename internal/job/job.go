@@ -1,3 +1,5 @@
+package job
+
 type Status string
 
 const (
