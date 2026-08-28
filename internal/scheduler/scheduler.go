@@ -3,46 +3,61 @@ package scheduler
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Samuelmasih6/fairsched/internal/job"
 )
 
 type Scheduler struct {
-	queue []job.Job
-
-	mu sync.Mutex
+	queue chan job.Job
 }
 
-func New() *Scheduler {
+func New(queueSize int) *Scheduler {
 	return &Scheduler{
-		queue: make([]job.Job, 0),
+		queue: make(chan job.Job, queueSize),
 	}
 }
 
 func (s *Scheduler) Submit(j job.Job) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	j.Status = job.StatusQueued
-	s.queue = append(s.queue, j)
+	s.queue <- j
 }
 
-func (s *Scheduler) Next() (job.Job, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *Scheduler) Start(workerCount int) {
+	var wg sync.WaitGroup
 
-	if len(s.queue) == 0 {
-		return job.Job{}, false
+	for i := 1; i <= workerCount; i++ {
+		wg.Add(1)
+
+		go func(workerID int) {
+			defer wg.Done()
+
+			for j := range s.queue {
+				j.Status = job.StatusRunning
+
+				fmt.Printf(
+					"Worker %d started job %s\n",
+					workerID,
+					j.ID,
+				)
+
+				// Simulate actual work.
+				time.Sleep(2 * time.Second)
+
+				j.Status = job.StatusCompleted
+
+				fmt.Printf(
+					"Worker %d completed job %s\n",
+					workerID,
+					j.ID,
+				)
+			}
+		}(i)
 	}
 
-	j := s.queue[0]
-	s.queue = s.queue[1:]
-
-	j.Status = job.StatusRunning
-
-	return j, true
+	wg.Wait()
 }
 
-func Execute(j job.Job) {
-	fmt.Printf("Executing job %s: %s\n", j.ID, j.Payload)
+func (s *Scheduler) Close() {
+	close(s.queue)
 }
