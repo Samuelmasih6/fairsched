@@ -10,6 +10,7 @@ import (
 
 type Scheduler struct {
 	queue chan job.Job
+	wg    sync.WaitGroup
 }
 
 func New(queueSize int) *Scheduler {
@@ -24,13 +25,11 @@ func (s *Scheduler) Submit(j job.Job) {
 }
 
 func (s *Scheduler) Start(workerCount int) {
-	var wg sync.WaitGroup
-
 	for i := 1; i <= workerCount; i++ {
-		wg.Add(1)
+		s.wg.Add(1)
 
 		go func(workerID int) {
-			defer wg.Done()
+			defer s.wg.Done()
 
 			for j := range s.queue {
 				j.Status = job.StatusRunning
@@ -41,7 +40,7 @@ func (s *Scheduler) Start(workerCount int) {
 					j.ID,
 				)
 
-				// Simulate actual work.
+				// Simulate job execution.
 				time.Sleep(2 * time.Second)
 
 				j.Status = job.StatusCompleted
@@ -54,10 +53,9 @@ func (s *Scheduler) Start(workerCount int) {
 			}
 		}(i)
 	}
-
-	wg.Wait()
 }
 
 func (s *Scheduler) Close() {
 	close(s.queue)
+	s.wg.Wait()
 }
