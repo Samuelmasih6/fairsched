@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/Samuelmasih6/fairsched/internal/job"
 	"github.com/Samuelmasih6/fairsched/internal/scheduler"
 )
 
 func main() {
-	s := scheduler.New()
+	s := scheduler.New(10)
 
 	jobs := []job.Job{
 		{
@@ -29,25 +27,28 @@ func main() {
 			Priority: 5,
 			Payload:  "Process file C",
 		},
+		{
+			ID:       "job-004",
+			TenantID: "tenant-b",
+			Priority: 3,
+			Payload:  "Process file D",
+		},
+		{
+			ID:       "job-005",
+			TenantID: "tenant-a",
+			Priority: 8,
+			Payload:  "Process file E",
+		},
 	}
 
+	// Start 3 workers.
+	s.Start(3)
+
+	// Submit jobs.
 	for _, j := range jobs {
 		s.Submit(j)
 	}
 
-	for {
-		j, ok := s.Next()
-
-		if !ok {
-			break
-		}
-
-		scheduler.Execute(j)
-
-		fmt.Printf(
-			"Job %s status: %s\n",
-			j.ID,
-			j.Status,
-		)
-	}
+	// Close the queue and wait for workers.
+	s.Close()
 }
