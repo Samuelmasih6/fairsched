@@ -16,6 +16,8 @@ type Scheduler struct {
 	cond *sync.Cond
 
 	wg sync.WaitGroup
+
+	stopping bool
 }
 
 func New() *Scheduler {
@@ -31,6 +33,10 @@ func New() *Scheduler {
 func (s *Scheduler) Submit(j job.Job) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if s.stopping {
+		return
+	}
 
 	j.Status = job.StatusQueued
 
@@ -49,8 +55,13 @@ func (s *Scheduler) Start(workerCount int) {
 			for {
 				s.mu.Lock()
 
-				for s.queue.Len() == 0 {
+				for s.queue.Len() == 0 && !s.stopping {
 					s.cond.Wait()
+				}
+
+				if s.queue.Len() == 0 && s.stopping {
+					s.mu.Unlock()
+					return
 				}
 
 				j := heap.Pop(s.queue).(job.Job)
@@ -81,5 +92,13 @@ func (s *Scheduler) Start(workerCount int) {
 }
 
 func (s *Scheduler) Close() {
+	s.mu.Lock()
+
+	s.stopping = true
+
+	s.cond.Broadcast()
+
+	s.mu.Unlock()
+
 	s.wg.Wait()
 }
