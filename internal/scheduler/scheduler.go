@@ -50,8 +50,7 @@ func (s *Scheduler) Start(workerCount int) {
 				s.mu.Lock()
 
 				for s.queue.Len() == 0 {
-					s.mu.Unlock()
-					return
+					s.cond.Wait()
 				}
 
 				j := heap.Pop(s.queue).(job.Job)
