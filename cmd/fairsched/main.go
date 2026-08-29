@@ -44,4 +44,6 @@ func main() {
 		Priority: 8,
 		Payload:  "High priority job",
 	})
+
+	s.Close()
 }
