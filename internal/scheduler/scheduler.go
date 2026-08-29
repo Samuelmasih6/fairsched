@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"container/heap"
 	"fmt"
 	"sync"
 	"time"
@@ -9,19 +10,33 @@ import (
 )
 
 type Scheduler struct {
-	queue chan job.Job
-	wg    sync.WaitGroup
+	queue *PriorityQueue
+
+	mu   sync.Mutex
+	cond *sync.Cond
+
+	wg sync.WaitGroup
 }
 
-func New(queueSize int) *Scheduler {
-	return &Scheduler{
-		queue: make(chan job.Job, queueSize),
+func New() *Scheduler {
+	s := &Scheduler{
+		queue: NewPriorityQueue(),
 	}
+
+	s.cond = sync.NewCond(&s.mu)
+
+	return s
 }
 
 func (s *Scheduler) Submit(j job.Job) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	j.Status = job.StatusQueued
-	s.queue <- j
+
+	heap.Push(s.queue, j)
+
+	s.cond.Signal()
 }
 
 func (s *Scheduler) Start(workerCount int) {
@@ -31,16 +46,27 @@ func (s *Scheduler) Start(workerCount int) {
 		go func(workerID int) {
 			defer s.wg.Done()
 
-			for j := range s.queue {
+			for {
+				s.mu.Lock()
+
+				for s.queue.Len() == 0 {
+					s.mu.Unlock()
+					return
+				}
+
+				j := heap.Pop(s.queue).(job.Job)
+
+				s.mu.Unlock()
+
 				j.Status = job.StatusRunning
 
 				fmt.Printf(
-					"Worker %d started job %s\n",
+					"Worker %d started job %s (priority=%d)\n",
 					workerID,
 					j.ID,
+					j.Priority,
 				)
 
-				// Simulate job execution.
 				time.Sleep(2 * time.Second)
 
 				j.Status = job.StatusCompleted
@@ -56,6 +82,5 @@ func (s *Scheduler) Start(workerCount int) {
 }
 
 func (s *Scheduler) Close() {
-	close(s.queue)
 	s.wg.Wait()
 }
