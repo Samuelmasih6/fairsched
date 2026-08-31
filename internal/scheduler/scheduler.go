@@ -77,7 +77,7 @@ func (s *Scheduler) Start(workerCount int) {
 					j.Priority,
 				)
 
-				time.Sleep(2 * time.Second)
+				time.Sleep(j.Duration)
 
 				j.Status = job.StatusCompleted
 
