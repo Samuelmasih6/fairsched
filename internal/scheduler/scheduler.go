@@ -71,10 +71,11 @@ func (s *Scheduler) Start(workerCount int) {
 				j.Status = job.StatusRunning
 
 				fmt.Printf(
-					"Worker %d started job %s (priority=%d)\n",
+					"Worker %d started job %s (priority=%d, duration=%v)\n",
 					workerID,
 					j.ID,
 					j.Priority,
+					j.Duration,
 				)
 
 				time.Sleep(j.Duration)
