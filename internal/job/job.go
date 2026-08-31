@@ -1,5 +1,7 @@
 package job
 
+import "time"
+
 type Status string
 
 const (
@@ -12,9 +14,8 @@ const (
 type Job struct {
 	ID       string
 	TenantID string
-
 	Status   Status
 	Priority int
-
-	Payload string
+	Payload  string
+	Duration time.Duration
 }
