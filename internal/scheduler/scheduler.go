@@ -102,7 +102,7 @@ func (s *Scheduler) Start(workerCount int) {
 	}
 }
 
-func (s *Scheduler) Close() {
+func (s *Scheduler) Shutdown() {
 	s.mu.Lock()
 
 	s.stopping = true
@@ -110,6 +110,8 @@ func (s *Scheduler) Close() {
 	s.cond.Broadcast()
 
 	s.mu.Unlock()
+}
 
+func (s *Scheduler) Wait() {
 	s.wg.Wait()
 }

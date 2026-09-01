@@ -10,7 +10,7 @@ import (
 func main() {
 	s := scheduler.New()
 
-	s.Start(1)
+	s.Start(3)
 
 	s.Submit(job.Job{
 		ID:       "job-001",
@@ -52,5 +52,5 @@ func main() {
 		Duration: 7 * time.Second,
 	})
 
-	s.Close()
+	s.Shutdown()
 }
