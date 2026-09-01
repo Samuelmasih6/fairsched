@@ -38,6 +38,7 @@ func (s *Scheduler) Submit(j job.Job) {
 		return
 	}
 
+	j.CreatedAt = time.Now()
 	j.Status = job.StatusQueued
 
 	heap.Push(s.queue, j)
