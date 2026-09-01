@@ -69,6 +69,7 @@ func (s *Scheduler) Start(workerCount int) {
 
 				s.mu.Unlock()
 
+				j.StartedAt = time.Now()
 				j.Status = job.StatusRunning
 
 				fmt.Printf(
@@ -81,12 +82,20 @@ func (s *Scheduler) Start(workerCount int) {
 
 				time.Sleep(j.Duration)
 
+				j.CompletedAt = time.Now()
 				j.Status = job.StatusCompleted
 
+				queueWait := j.StartedAt.Sub(j.CreatedAt)
+				executionTime := j.CompletedAt.Sub(j.StartedAt)
+				totalLatency := j.CompletedAt.Sub(j.CreatedAt)
+
 				fmt.Printf(
-					"Worker %d completed job %s\n",
+					"Worker %d completed job %s | queue_wait=%v execution=%v latency=%v\n",
 					workerID,
 					j.ID,
+					queueWait,
+					executionTime,
+					totalLatency,
 				)
 			}
 		}(i)
