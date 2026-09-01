@@ -18,4 +18,8 @@ type Job struct {
 	Priority int
 	Payload  string
 	Duration time.Duration
+
+	CreatedAt   time.Time
+	StartedAt   time.Time
+	CompletedAt time.Time
 }
