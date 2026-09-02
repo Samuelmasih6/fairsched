@@ -30,20 +30,21 @@ func New() *Scheduler {
 	return s
 }
 
-func (s *Scheduler) Submit(j job.Job) {
+func (s *Scheduler) Submit(j job.Job) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.stopping {
-		return
+		return fmt.Errorf("scheduler is shutting down")
 	}
 
 	j.CreatedAt = time.Now()
 	j.Status = job.StatusQueued
 
 	heap.Push(s.queue, j)
-
 	s.cond.Signal()
+
+	return nil
 }
 
 func (s *Scheduler) Start(workerCount int) {
