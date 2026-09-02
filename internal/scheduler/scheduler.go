@@ -42,6 +42,7 @@ func (s *Scheduler) Submit(j job.Job) error {
 	j.Status = job.StatusQueued
 
 	heap.Push(s.queue, j)
+
 	s.cond.Signal()
 
 	return nil
@@ -107,7 +108,6 @@ func (s *Scheduler) Shutdown() {
 	s.mu.Lock()
 
 	s.stopping = true
-
 	s.cond.Broadcast()
 
 	s.mu.Unlock()
