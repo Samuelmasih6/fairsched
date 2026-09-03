@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Samuelmasih6/fairsched/internal/job"
 	"github.com/Samuelmasih6/fairsched/internal/scheduler"
@@ -12,45 +13,29 @@ func main() {
 
 	s.Start(3)
 
-	jobs := []job.Job{
-		{
-			ID:       "job-001",
-			TenantID: "tenant-a",
-			Priority: 1,
-			Payload:  "Low priority job",
-			Duration: 5,
-		},
-		{
-			ID:       "job-002",
-			TenantID: "tenant-a",
-			Priority: 10,
-			Payload:  "Highest priority job",
-			Duration: 1,
-		},
-		{
-			ID:       "job-003",
-			TenantID: "tenant-b",
-			Priority: 5,
-			Payload:  "Medium priority job",
-			Duration: 3,
-		},
-		{
-			ID:       "job-004",
-			TenantID: "tenant-b",
-			Priority: 3,
-			Payload:  "Low-medium priority job",
-			Duration: 2,
-		},
-		{
-			ID:       "job-005",
-			TenantID: "tenant-a",
-			Priority: 8,
-			Payload:  "High priority job",
-			Duration: 7,
-		},
+	// Low-priority job
+	lowPriorityJob := job.Job{
+		ID:       "low-priority",
+		TenantID: "tenant-a",
+		Priority: 1,
+		Payload:  "Low priority job",
+		Duration: 1 * time.Second,
 	}
 
-	for _, j := range jobs {
+	if err := s.Submit(lowPriorityJob); err != nil {
+		fmt.Println("failed to submit job:", err)
+	}
+
+	// Many high-priority jobs
+	for i := 1; i <= 20; i++ {
+		j := job.Job{
+			ID:       fmt.Sprintf("high-priority-%02d", i),
+			TenantID: "tenant-b",
+			Priority: 10,
+			Payload:  "High priority job",
+			Duration: 1 * time.Second,
+		}
+
 		if err := s.Submit(j); err != nil {
 			fmt.Println("failed to submit job:", err)
 		}
