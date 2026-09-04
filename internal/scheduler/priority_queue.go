@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"container/heap"
+	"time"
 
 	"github.com/Samuelmasih6/fairsched/internal/job"
 )
@@ -13,7 +14,7 @@ func (pq PriorityQueue) Len() int {
 }
 
 func (pq PriorityQueue) Less(i, j int) bool {
-	return pq[i].Priority > pq[j].Priority
+	return effectivePriority(pq[i]) > effectivePriority(pq[j])
 }
 
 func (pq PriorityQueue) Swap(i, j int) {
@@ -40,8 +41,12 @@ func (pq PriorityQueue) Peek() job.Job {
 
 func NewPriorityQueue() *PriorityQueue {
 	pq := &PriorityQueue{}
-
 	heap.Init(pq)
-
 	return pq
+}
+
+func effectivePriority(j job.Job) float64 {
+	waitingTime := time.Since(j.CreatedAt).Seconds()
+
+	return float64(j.Priority) + waitingTime
 }
