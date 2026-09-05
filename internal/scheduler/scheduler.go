@@ -67,6 +67,8 @@ func (s *Scheduler) Start(workerCount int) {
 					return
 				}
 
+				s.refreshQueue()
+
 				j := heap.Pop(s.queue).(job.Job)
 
 				s.mu.Unlock()
