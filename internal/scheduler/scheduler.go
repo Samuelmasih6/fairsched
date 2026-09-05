@@ -116,3 +116,15 @@ func (s *Scheduler) Shutdown() {
 func (s *Scheduler) Wait() {
 	s.wg.Wait()
 }
+
+func (s *Scheduler) refreshQueue() {
+	oldJobs := make([]job.Job, s.queue.Len())
+
+	for i := range oldJobs {
+		oldJobs[i] = heap.Pop(s.queue).(job.Job)
+	}
+
+	for _, j := range oldJobs {
+		heap.Push(s.queue, j)
+	}
+}
