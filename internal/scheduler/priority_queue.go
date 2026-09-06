@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"container/heap"
 	"time"
 
 	"github.com/Samuelmasih6/fairsched/internal/job"
@@ -13,40 +12,38 @@ func (pq PriorityQueue) Len() int {
 	return len(pq)
 }
 
-func (pq PriorityQueue) Less(i, j int) bool {
-	return effectivePriority(pq[i]) > effectivePriority(pq[j])
+func (pq *PriorityQueue) Push(j job.Job) {
+	*pq = append(*pq, j)
 }
 
-func (pq PriorityQueue) Swap(i, j int) {
-	pq[i], pq[j] = pq[j], pq[i]
-}
+func (pq *PriorityQueue) PopHighestPriority(agingFactor float64) job.Job {
+	now := time.Now()
 
-func (pq *PriorityQueue) Push(x interface{}) {
-	*pq = append(*pq, x.(job.Job))
-}
+	bestIndex := 0
+	bestScore := effectivePriority((*pq)[0], now, agingFactor)
 
-func (pq *PriorityQueue) Pop() interface{} {
-	old := *pq
-	n := len(old)
+	for i := 1; i < len(*pq); i++ {
+		score := effectivePriority((*pq)[i], now, agingFactor)
 
-	j := old[n-1]
-	*pq = old[:n-1]
+		if score > bestScore {
+			bestScore = score
+			bestIndex = i
+		}
+	}
+
+	j := (*pq)[bestIndex]
+
+	*pq = append((*pq)[:bestIndex], (*pq)[bestIndex+1:]...)
 
 	return j
 }
 
-func (pq PriorityQueue) Peek() job.Job {
-	return pq[0]
+func effectivePriority(j job.Job, now time.Time, agingFactor float64) float64 {
+	waitingSeconds := now.Sub(j.CreatedAt).Seconds()
+
+	return float64(j.Priority) + agingFactor*waitingSeconds
 }
 
 func NewPriorityQueue() *PriorityQueue {
-	pq := &PriorityQueue{}
-	heap.Init(pq)
-	return pq
-}
-
-func effectivePriority(j job.Job) float64 {
-	waitingTime := time.Since(j.CreatedAt).Seconds()
-
-	return float64(j.Priority) + waitingTime
+	return &PriorityQueue{}
 }
