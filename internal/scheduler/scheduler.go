@@ -12,6 +12,8 @@ import (
 type Scheduler struct {
 	queue *PriorityQueue
 
+	agingFactor float64
+
 	mu   sync.Mutex
 	cond *sync.Cond
 
@@ -22,7 +24,8 @@ type Scheduler struct {
 
 func New() *Scheduler {
 	s := &Scheduler{
-		queue: NewPriorityQueue(),
+		queue:       NewPriorityQueue(),
+		agingFactor: 1.0,
 	}
 
 	s.cond = sync.NewCond(&s.mu)
@@ -41,7 +44,7 @@ func (s *Scheduler) Submit(j job.Job) error {
 	j.CreatedAt = time.Now()
 	j.Status = job.StatusQueued
 
-	heap.Push(s.queue, j)
+	s.queue.Push(j)
 
 	s.cond.Signal()
 
@@ -67,10 +70,7 @@ func (s *Scheduler) Start(workerCount int) {
 					return
 				}
 
-				s.refreshQueue()
-
-				j := heap.Pop(s.queue).(job.Job)
-
+				j := s.queue.PopHighestPriority(s.agingFactor)
 				s.mu.Unlock()
 
 				j.StartedAt = time.Now()
