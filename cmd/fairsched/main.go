@@ -13,7 +13,7 @@ func main() {
 
 	s.Start(3)
 
-	// Occupy all workers first.
+	// Occupy all workers.
 	for i := 1; i <= 3; i++ {
 		j := job.Job{
 			ID:       fmt.Sprintf("initial-high-%02d", i),
@@ -28,10 +28,10 @@ func main() {
 		}
 	}
 
-	// Give workers time to start the initial jobs.
+	// Give the workers time to start.
 	time.Sleep(100 * time.Millisecond)
 
-	// This job enters while all workers are busy.
+	// Low-priority job enters while all workers are busy.
 	lowPriorityJob := job.Job{
 		ID:       "low-priority",
 		TenantID: "tenant-a",
@@ -44,8 +44,8 @@ func main() {
 		fmt.Println("failed to submit job:", err)
 	}
 
-	// Keep adding high-priority jobs.
-	for i := 1; i <= 60; i++ {
+	// Continuously submit high-priority jobs.
+	for i := 1; i <= 40; i++ {
 		j := job.Job{
 			ID:       fmt.Sprintf("high-priority-%02d", i),
 			TenantID: "tenant-b",
@@ -57,6 +57,9 @@ func main() {
 		if err := s.Submit(j); err != nil {
 			fmt.Println("failed to submit job:", err)
 		}
+
+		// New high-priority jobs arrive over time.
+		time.Sleep(300 * time.Millisecond)
 	}
 
 	s.Shutdown()
