@@ -2,77 +2,53 @@ package main
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/Samuelmasih6/fairsched/internal/job"
 	"github.com/Samuelmasih6/fairsched/internal/scheduler"
 )
 
 func main() {
-	s := scheduler.New(1.0)
+	fmt.Println("Running priority-only benchmark...")
 
-	s.Start(3)
-
-	// Occupy all workers.
-	for i := 1; i <= 3; i++ {
-		j := job.Job{
-			ID:       fmt.Sprintf("initial-high-%02d", i),
-			TenantID: "tenant-b",
-			Priority: 10,
-			Payload:  "Initial high priority job",
-			Duration: 3 * time.Second,
-		}
-
-		if err := s.Submit(j); err != nil {
-			fmt.Println("failed to submit job:", err)
-		}
-	}
-
-	// Give the workers time to start.
-	time.Sleep(100 * time.Millisecond)
-
-	// Low-priority job enters while all workers are busy.
-	lowPriorityJob := job.Job{
-		ID:       "low-priority",
-		TenantID: "tenant-a",
-		Priority: 1,
-		Payload:  "Low priority job",
-		Duration: 1 * time.Second,
-	}
-
-	if err := s.Submit(lowPriorityJob); err != nil {
-		fmt.Println("failed to submit job:", err)
-	}
-
-	// Continuously submit high-priority jobs.
-	for i := 1; i <= 40; i++ {
-		j := job.Job{
-			ID:       fmt.Sprintf("high-priority-%02d", i),
-			TenantID: "tenant-b",
-			Priority: 10,
-			Payload:  "High priority job",
-			Duration: 1 * time.Second,
-		}
-
-		if err := s.Submit(j); err != nil {
-			fmt.Println("failed to submit job:", err)
-		}
-
-		// New high-priority jobs arrive over time.
-		time.Sleep(300 * time.Millisecond)
-	}
-
-	s.Shutdown()
-	s.Wait()
-
-	metrics := s.Metrics()
-	summary := scheduler.SummarizeMetrics(metrics)
+	priorityResult := scheduler.RunBenchmark(0)
 
 	fmt.Println()
-	fmt.Println("=== Scheduling Summary ===")
-	fmt.Printf("Jobs completed: %d\n", summary.JobCount)
-	fmt.Printf("Average queue wait: %v\n", summary.AverageQueueWait)
-	fmt.Printf("Maximum queue wait: %v\n", summary.MaximumQueueWait)
-	fmt.Printf("Average latency: %v\n", summary.AverageLatency)
-	fmt.Printf("Maximum latency: %v\n", summary.MaximumLatency)
+	fmt.Println("Running priority + aging benchmark...")
+
+	agingResult := scheduler.RunBenchmark(1.0)
+
+	fmt.Println()
+	fmt.Println("=== Benchmark Results ===")
+
+	fmt.Println()
+	fmt.Println("Priority Only")
+	printResult(priorityResult)
+
+	fmt.Println()
+	fmt.Println("Priority + Aging")
+	printResult(agingResult)
+
+	fmt.Println()
+	fmt.Println("=== Comparison ===")
+
+	fmt.Printf(
+		"Low-priority queue wait: %v → %v\n",
+		priorityResult.LowPriorityWait,
+		agingResult.LowPriorityWait,
+	)
+
+	fmt.Printf(
+		"Average queue wait: %v → %v\n",
+		priorityResult.AverageQueueWait,
+		agingResult.AverageQueueWait,
+	)
+}
+
+func printResult(result scheduler.BenchmarkResult) {
+	fmt.Printf("Aging factor: %v\n", result.AgingFactor)
+	fmt.Printf("Jobs completed: %d\n", result.JobsCompleted)
+	fmt.Printf("Low-priority wait: %v\n", result.LowPriorityWait)
+	fmt.Printf("Average queue wait: %v\n", result.AverageQueueWait)
+	fmt.Printf("Maximum queue wait: %v\n", result.MaximumQueueWait)
+	fmt.Printf("Average latency: %v\n", result.AverageLatency)
+	fmt.Printf("Maximum latency: %v\n", result.MaximumLatency)
 }
