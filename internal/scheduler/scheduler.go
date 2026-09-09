@@ -21,6 +21,14 @@ type Scheduler struct {
 	stopping bool
 }
 
+type JobMetrics struct {
+	JobID         string
+	Priority      int
+	QueueWait     time.Duration
+	ExecutionTime time.Duration
+	TotalLatency  time.Duration
+}
+
 func New() *Scheduler {
 	s := &Scheduler{
 		queue:       NewPriorityQueue(),
