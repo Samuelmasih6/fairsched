@@ -19,6 +19,8 @@ type Scheduler struct {
 	wg sync.WaitGroup
 
 	stopping bool
+
+	metrics []JobMetrics
 }
 
 type JobMetrics struct {
@@ -99,6 +101,18 @@ func (s *Scheduler) Start(workerCount int) {
 				queueWait := j.StartedAt.Sub(j.CreatedAt)
 				executionTime := j.CompletedAt.Sub(j.StartedAt)
 				totalLatency := j.CompletedAt.Sub(j.CreatedAt)
+
+				s.mu.Lock()
+
+				s.metrics = append(s.metrics, JobMetrics{
+					JobID:         j.ID,
+					Priority:      j.Priority,
+					QueueWait:     queueWait,
+					ExecutionTime: executionTime,
+					TotalLatency:  totalLatency,
+				})
+
+				s.mu.Unlock()
 
 				fmt.Printf(
 					"Worker %d completed job %s | queue_wait=%v execution=%v latency=%v\n",
