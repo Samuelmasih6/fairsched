@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	s := scheduler.New()
+	s := scheduler.New(1.0)
 
 	s.Start(3)
 
