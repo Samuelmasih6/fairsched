@@ -31,10 +31,10 @@ type JobMetrics struct {
 	TotalLatency  time.Duration
 }
 
-func New() *Scheduler {
+func New(agingFactor float64) *Scheduler {
 	s := &Scheduler{
 		queue:       NewPriorityQueue(),
-		agingFactor: 1.0,
+		agingFactor: agingFactor,
 	}
 
 	s.cond = sync.NewCond(&s.mu)
