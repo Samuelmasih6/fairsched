@@ -64,4 +64,15 @@ func main() {
 
 	s.Shutdown()
 	s.Wait()
+
+	metrics := s.Metrics()
+	summary := scheduler.SummarizeMetrics(metrics)
+
+	fmt.Println()
+	fmt.Println("=== Scheduling Summary ===")
+	fmt.Printf("Jobs completed: %d\n", summary.JobCount)
+	fmt.Printf("Average queue wait: %v\n", summary.AverageQueueWait)
+	fmt.Printf("Maximum queue wait: %v\n", summary.MaximumQueueWait)
+	fmt.Printf("Average latency: %v\n", summary.AverageLatency)
+	fmt.Printf("Maximum latency: %v\n", summary.MaximumLatency)
 }
