@@ -139,3 +139,13 @@ func (s *Scheduler) Shutdown() {
 func (s *Scheduler) Wait() {
 	s.wg.Wait()
 }
+
+func (s *Scheduler) Metrics() []JobMetrics {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	metrics := make([]JobMetrics, len(s.metrics))
+	copy(metrics, s.metrics)
+
+	return metrics
+}
