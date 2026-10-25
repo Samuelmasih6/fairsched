@@ -15,6 +15,8 @@ type BenchmarkResult struct {
 	LowPriorityWait  time.Duration
 	AverageLatency   time.Duration
 	MaximumLatency   time.Duration
+	TenantJobCounts  map[string]int
+	FairnessIndex    float64
 }
 
 func RunBenchmark(agingFactor float64) BenchmarkResult {
@@ -59,6 +61,8 @@ func RunBenchmark(agingFactor float64) BenchmarkResult {
 
 	metrics := s.Metrics()
 	summary := SummarizeMetrics(metrics)
+	tenantCounts := CompletedJobsByTenant(metrics)
+	fairnessIndex := JainFairnessIndex(tenantCounts)
 
 	var lowPriorityWait time.Duration
 
@@ -77,5 +81,7 @@ func RunBenchmark(agingFactor float64) BenchmarkResult {
 		LowPriorityWait:  lowPriorityWait,
 		AverageLatency:   summary.AverageLatency,
 		MaximumLatency:   summary.MaximumLatency,
+		TenantJobCounts:  tenantCounts,
+		FairnessIndex:    fairnessIndex,
 	}
 }

@@ -51,4 +51,6 @@ func printResult(result scheduler.BenchmarkResult) {
 	fmt.Printf("Maximum queue wait: %v\n", result.MaximumQueueWait)
 	fmt.Printf("Average latency: %v\n", result.AverageLatency)
 	fmt.Printf("Maximum latency: %v\n", result.MaximumLatency)
+	fmt.Printf("Tenant job counts: %v\n", result.TenantJobCounts)
+	fmt.Printf("Jain fairness index: %.4f\n", result.FairnessIndex)
 }
