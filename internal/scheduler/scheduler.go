@@ -25,6 +25,7 @@ type Scheduler struct {
 
 type JobMetrics struct {
 	JobID         string
+	TenantID      string
 	Priority      int
 	QueueWait     time.Duration
 	ExecutionTime time.Duration
@@ -106,6 +107,7 @@ func (s *Scheduler) Start(workerCount int) {
 
 				s.metrics = append(s.metrics, JobMetrics{
 					JobID:         j.ID,
+					TenantID:      j.TenantID,
 					Priority:      j.Priority,
 					QueueWait:     queueWait,
 					ExecutionTime: executionTime,
