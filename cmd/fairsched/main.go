@@ -8,39 +8,34 @@ import (
 
 func main() {
 	fmt.Println("Running priority-only benchmark...")
-
 	priorityResult := scheduler.RunBenchmark(0)
 
 	fmt.Println()
 	fmt.Println("Running priority + aging benchmark...")
-
 	agingResult := scheduler.RunBenchmark(1.0)
 
 	fmt.Println()
 	fmt.Println("=== Benchmark Results ===")
 
-	fmt.Println()
-	fmt.Println("Priority Only")
+	fmt.Println("\nPriority Only")
 	printResult(priorityResult)
 
-	fmt.Println()
-	fmt.Println("Priority + Aging")
+	fmt.Println("\nPriority + Aging")
 	printResult(agingResult)
 
-	fmt.Println()
-	fmt.Println("=== Comparison ===")
+	fmt.Println("\n=== Comparison ===")
+	fmt.Printf("Low-priority queue wait: %v → %v\n",
+		priorityResult.LowPriorityWait, agingResult.LowPriorityWait)
+	fmt.Printf("Average queue wait: %v → %v\n",
+		priorityResult.AverageQueueWait, agingResult.AverageQueueWait)
 
-	fmt.Printf(
-		"Low-priority queue wait: %v → %v\n",
-		priorityResult.LowPriorityWait,
-		agingResult.LowPriorityWait,
-	)
-
-	fmt.Printf(
-		"Average queue wait: %v → %v\n",
-		priorityResult.AverageQueueWait,
-		agingResult.AverageQueueWait,
-	)
+	fmt.Println("\n=== Tenant Fairness Benchmark ===")
+	fairnessResult := scheduler.RunTenantFairnessBenchmark()
+	fmt.Printf("Jobs completed: %d\n", fairnessResult.JobsCompleted)
+	fmt.Printf("Tenant job counts: %v\n", fairnessResult.TenantJobCounts)
+	fmt.Printf("Jain fairness index: %.4f\n", fairnessResult.FairnessIndex)
+	fmt.Printf("Average queue wait: %v\n", fairnessResult.AverageQueueWait)
+	fmt.Printf("Maximum queue wait: %v\n", fairnessResult.MaximumQueueWait)
 }
 
 func printResult(result scheduler.BenchmarkResult) {
