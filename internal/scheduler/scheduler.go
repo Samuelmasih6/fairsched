@@ -9,7 +9,7 @@ import (
 )
 
 type Scheduler struct {
-	queue *PriorityQueue
+	queue *TenantQueue
 
 	agingFactor float64
 
@@ -34,7 +34,7 @@ type JobMetrics struct {
 
 func New(agingFactor float64) *Scheduler {
 	s := &Scheduler{
-		queue:       NewPriorityQueue(),
+		queue:       NewTenantQueue(),
 		agingFactor: agingFactor,
 	}
 
@@ -80,7 +80,12 @@ func (s *Scheduler) Start(workerCount int) {
 					return
 				}
 
-				j := s.queue.PopHighestPriority(s.agingFactor)
+				j, err := s.queue.PopNext(s.agingFactor)
+				if err != nil {
+					s.mu.Unlock()
+					continue
+				}
+
 				s.mu.Unlock()
 
 				j.StartedAt = time.Now()
