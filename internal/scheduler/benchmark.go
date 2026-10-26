@@ -130,3 +130,50 @@ func RunTenantFairnessBenchmark() BenchmarkResult {
 		FairnessIndex:    JainFairnessIndex(tenantCounts),
 	}
 }
+
+func RunUnequalTenantBenchmark() BenchmarkResult {
+	s := New(0)
+	s.Start(3)
+
+	// Tenant A submits 10 jobs.
+	for i := 1; i <= 10; i++ {
+		if err := s.Submit(job.Job{
+			ID:       fmt.Sprintf("tenant-a-%02d", i),
+			TenantID: "tenant-a",
+			Priority: 5,
+			Duration: 200 * time.Millisecond,
+		}); err != nil {
+			panic(err)
+		}
+	}
+
+	// Tenant B submits 40 jobs.
+	for i := 1; i <= 40; i++ {
+		if err := s.Submit(job.Job{
+			ID:       fmt.Sprintf("tenant-b-%02d", i),
+			TenantID: "tenant-b",
+			Priority: 5,
+			Duration: 200 * time.Millisecond,
+		}); err != nil {
+			panic(err)
+		}
+	}
+
+	s.Shutdown()
+	s.Wait()
+
+	metrics := s.Metrics()
+	summary := SummarizeMetrics(metrics)
+	tenantCounts := CompletedJobsByTenant(metrics)
+
+	return BenchmarkResult{
+		AgingFactor:      0,
+		JobsCompleted:    summary.JobCount,
+		AverageQueueWait: summary.AverageQueueWait,
+		MaximumQueueWait: summary.MaximumQueueWait,
+		AverageLatency:   summary.AverageLatency,
+		MaximumLatency:   summary.MaximumLatency,
+		TenantJobCounts:  tenantCounts,
+		FairnessIndex:    JainFairnessIndex(tenantCounts),
+	}
+}
