@@ -85,3 +85,48 @@ func RunBenchmark(agingFactor float64) BenchmarkResult {
 		FairnessIndex:    fairnessIndex,
 	}
 }
+
+func RunTenantFairnessBenchmark() BenchmarkResult {
+	s := New(0)
+
+	s.Start(3)
+
+	// Give both tenants equal demand.
+	for i := 1; i <= 20; i++ {
+		if err := s.Submit(job.Job{
+			ID:       fmt.Sprintf("tenant-a-%02d", i),
+			TenantID: "tenant-a",
+			Priority: 5,
+			Duration: 200 * time.Millisecond,
+		}); err != nil {
+			panic(err)
+		}
+
+		if err := s.Submit(job.Job{
+			ID:       fmt.Sprintf("tenant-b-%02d", i),
+			TenantID: "tenant-b",
+			Priority: 5,
+			Duration: 200 * time.Millisecond,
+		}); err != nil {
+			panic(err)
+		}
+	}
+
+	s.Shutdown()
+	s.Wait()
+
+	metrics := s.Metrics()
+	summary := SummarizeMetrics(metrics)
+	tenantCounts := CompletedJobsByTenant(metrics)
+
+	return BenchmarkResult{
+		AgingFactor:      0,
+		JobsCompleted:    summary.JobCount,
+		AverageQueueWait: summary.AverageQueueWait,
+		MaximumQueueWait: summary.MaximumQueueWait,
+		AverageLatency:   summary.AverageLatency,
+		MaximumLatency:   summary.MaximumLatency,
+		TenantJobCounts:  tenantCounts,
+		FairnessIndex:    JainFairnessIndex(tenantCounts),
+	}
+}
