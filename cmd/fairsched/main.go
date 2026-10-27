@@ -36,6 +36,17 @@ func main() {
 	fmt.Printf("Jain fairness index: %.4f\n", fairnessResult.FairnessIndex)
 	fmt.Printf("Average queue wait: %v\n", fairnessResult.AverageQueueWait)
 	fmt.Printf("Maximum queue wait: %v\n", fairnessResult.MaximumQueueWait)
+
+	fmt.Println()
+	fmt.Println("=== Unequal Tenant Demand Benchmark ===")
+
+	unequalResult := scheduler.RunUnequalTenantBenchmark()
+
+	fmt.Printf("Jobs completed: %d\n", unequalResult.JobsCompleted)
+	fmt.Printf("Tenant job counts: %v\n", unequalResult.TenantJobCounts)
+	fmt.Printf("Jain fairness index: %.4f\n", unequalResult.FairnessIndex)
+	fmt.Printf("Average queue wait: %v\n", unequalResult.AverageQueueWait)
+	fmt.Printf("Maximum queue wait: %v\n", unequalResult.MaximumQueueWait)
 }
 
 func printResult(result scheduler.BenchmarkResult) {
